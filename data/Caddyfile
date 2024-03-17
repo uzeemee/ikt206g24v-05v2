@@ -1,0 +1,4 @@
+https://web.devabz.no {
+    reverse_proxy production:80
+}
+

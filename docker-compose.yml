@@ -1,0 +1,50 @@
+version: '3'
+networks:
+  network:
+    external: false
+services:
+  app:
+    image: production-image
+    container_name: production
+    depends_on:
+      - db
+    networks:
+      - network
+    ports:
+      - 8080:8080
+      - 7115:7115
+    environment:
+      ConnectionStrings__DefaultConnection: "Host=db;Database=my_db;Username=my_user;Password=my_password"
+
+  db:
+    image: postgres:13.14-alpine3.19
+    networks:
+      - network
+    volumes:
+      - ~/apps/postgres:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: my_password
+      POSTGRES_USER: my_user
+      POSTGRES_DB: my_db
+
+  caddy:
+    image: caddy:latest
+    container_name: proxy
+    restart: always
+    networks:
+      - network
+    ports:
+      - 80:80
+      - 443:443
+    depends_on:
+      - app
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile
+      - ./caddy/site:/srv
+      - ./caddy/caddy_data:/data
+      - ./caddy/caddy_config:/config
+
+volumes:
+  caddy_data:
+    external: true
+  caddy_config:
